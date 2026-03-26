@@ -297,6 +297,7 @@
     var word = findWordById(id);
     var examples;
     var targetExample;
+    var targetExampleIndex;
 
     if (!word) {
       return;
@@ -312,7 +313,8 @@
       moveExample(1, word);
     } else if (action === "speak-sentence" || action === "speak-example") {
       examples = getWordExamples(word);
-      targetExample = examples[exampleIndex] || examples[0];
+      targetExampleIndex = typeof exampleIndex === "number" ? exampleIndex : getSafeExampleIndex(examples);
+      targetExample = examples[targetExampleIndex] || examples[0];
       markRecentStudy(id);
       render();
       speakText(targetExample ? targetExample.sentence : word.sentence);
@@ -712,6 +714,7 @@
 
   function getWordExamples(word) {
     var examples = [];
+    var fallbackExample;
 
     if (!word) {
       return examples;
@@ -727,19 +730,21 @@
       });
     }
 
-    if (!examples.length && word.sentence) {
-      examples.push({
-        sentence: word.sentence,
-        meaning: word.sentenceMeaning || "",
-        pronunciation: word.sentencePronunciation || ""
-      });
+    if (examples.length) {
+      return examples;
     }
 
-    while (examples.length < 3) {
-      examples.push(buildPracticeExample(word, examples.length));
+    fallbackExample = normalizeExampleItem({
+      sentence: word.sentence,
+      meaning: word.sentenceMeaning || "",
+      pronunciation: word.sentencePronunciation || ""
+    });
+
+    if (fallbackExample) {
+      examples.push(fallbackExample);
     }
 
-    return examples.slice(0, 3);
+    return examples;
   }
 
   function normalizeExampleItem(item) {
@@ -979,7 +984,12 @@
   }
 
   function renderExamplePanel(word, examples, currentExampleIndex) {
+    var isSingleExample = examples.length <= 1;
     var example = examples[currentExampleIndex] || examples[0];
+
+    if (!example) {
+      return '<p class="placeholder-text">예문 데이터가 아직 없어요.</p>';
+    }
 
     return (
       '<article class="example-panel">' +
@@ -996,8 +1006,8 @@
           '<p class="example-pronunciation">발음: ' + escapeHTML(example.pronunciation) + "</p>" +
         "</div>" +
         '<div class="example-nav">' +
-          '<button type="button" class="example-nav-button" data-action="prev-example" data-id="' + word.id + '">이전 예문</button>' +
-          '<button type="button" class="example-nav-button" data-action="next-example" data-id="' + word.id + '">다음 예문</button>' +
+          '<button type="button" class="example-nav-button" data-action="prev-example" data-id="' + word.id + '"' + (isSingleExample ? " disabled" : "") + '>이전 예문</button>' +
+          '<button type="button" class="example-nav-button" data-action="next-example" data-id="' + word.id + '"' + (isSingleExample ? " disabled" : "") + '>다음 예문</button>' +
         "</div>" +
       "</article>"
     );
@@ -1006,10 +1016,14 @@
   function renderListExampleSummary(examples) {
     var firstExample = examples[0];
 
+    if (!firstExample) {
+      return '<p class="list-text">예문 정보 없음</p>';
+    }
+
     return (
       '<div class="list-example-summary">' +
         '<div class="list-example-header">' +
-          '<span class="example-number">예문 3개 제공</span>' +
+          '<span class="example-number">예문 ' + examples.length + "개 제공</span>" +
           '<span class="example-tag">카드 보기 추천</span>' +
         "</div>" +
         '<p class="list-example-summary-text">' + escapeHTML(firstExample.sentence) + "</p>" +
@@ -1021,11 +1035,11 @@
     var parsedValue;
 
     if (value === null || typeof value === "undefined" || value === "") {
-      return 0;
+      return null;
     }
 
     parsedValue = Number(value);
-    return isNaN(parsedValue) ? 0 : parsedValue;
+    return isNaN(parsedValue) ? null : parsedValue;
   }
 
   function getEmptyStateTitle() {
