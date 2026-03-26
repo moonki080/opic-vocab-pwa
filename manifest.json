@@ -1,0 +1,24 @@
+{
+  "name": "OPIC Mate",
+  "short_name": "OPICMate",
+  "description": "오픽 말하기 실전에 맞춘 단어와 예문을 학습하는 PWA 앱",
+  "lang": "ko-KR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1b2559",
+  "background_color": "#0d153d",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

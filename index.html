@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1b2559">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="OPIC Mate">
+  <meta name="description" content="오픽 말하기 실전에 맞춘 단어와 예문을 학습하는 PWA 앱">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" href="./icons/icon-192.png" sizes="192x192">
+  <link rel="stylesheet" href="./style.css">
+  <title>OPIC Mate | 오픽 영어 말하기 단어 앱</title>
+</head>
+<body>
+  <div class="app-shell">
+    <section id="homeView" class="screen home-view">
+      <header class="hero-section">
+        <span class="hero-badge">오픽 영어 말하기 단어 앱</span>
+        <div class="hero-card">
+          <p class="hero-kicker">OPIC speaking vocab</p>
+          <h1>OPIC Mate</h1>
+          <p class="hero-description">매일 조금씩, 오픽 말하기 실력을 쌓아보세요.</p>
+
+          <div class="hero-highlight">
+            <span class="highlight-label">오늘의 한마디</span>
+            <strong id="encouragementText">오늘도 한 걸음씩 나아가고 있어요.</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="dashboard-layout">
+        <section class="dashboard-card spotlight-card">
+          <div class="spotlight-progress">
+            <div id="homeProgressRing" class="progress-ring" aria-hidden="true">
+              <div class="progress-ring-inner">
+                <strong id="homeProgressPercent">0%</strong>
+                <span>진행률</span>
+              </div>
+            </div>
+
+            <div class="spotlight-copy">
+              <p class="section-eyebrow">현재 학습 현황</p>
+              <h2 id="homeSummaryText">300개 중 0개 학습 완료</h2>
+              <p id="homeSummarySubtext">지금부터 차근차근 시작해 보세요.</p>
+
+              <div class="mini-progress" aria-hidden="true">
+                <div id="homeLinearProgress" class="mini-progress-fill"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-card stat-card">
+          <p class="section-eyebrow">학습 숫자</p>
+          <div class="stat-grid">
+            <article class="stat-box">
+              <span class="stat-label">전체 단어</span>
+              <strong id="homeTotalCount">0</strong>
+            </article>
+            <article class="stat-box">
+              <span class="stat-label">학습 완료</span>
+              <strong id="homeCompletedCount">0</strong>
+            </article>
+            <article class="stat-box">
+              <span class="stat-label">즐겨찾기</span>
+              <strong id="homeFavoriteCount">0</strong>
+            </article>
+            <article class="stat-box">
+              <span class="stat-label">진행률</span>
+              <strong id="homeProgressStat">0%</strong>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-card quick-card">
+          <div class="card-header-row">
+            <div>
+              <p class="section-eyebrow">빠른 시작</p>
+              <h2>지금 바로 학습 시작하기</h2>
+            </div>
+          </div>
+
+          <div id="homeActions" class="quick-start-grid">
+            <button type="button" class="home-action-button primary" data-home-action="continue">이어서 학습하기</button>
+            <button type="button" class="home-action-button primary-soft" data-home-action="random">처음부터 랜덤 학습</button>
+            <button type="button" class="home-action-button" data-home-action="favorites">즐겨찾기만 보기</button>
+            <button type="button" class="home-action-button" data-home-action="completed">완료한 단어 복습하기</button>
+          </div>
+        </section>
+
+        <section class="dashboard-card recent-card">
+          <div class="card-header-row">
+            <div>
+              <p class="section-eyebrow">최근 학습 정보</p>
+              <h2 id="recentWordText">아직 학습 기록이 없어요.</h2>
+            </div>
+          </div>
+          <p id="recentTimeText" class="recent-time">단어 학습을 시작하면 최근 기록이 표시돼요.</p>
+          <p id="recentCategoryText" class="recent-meta">마지막으로 본 단어와 카테고리를 여기에서 확인할 수 있어요.</p>
+        </section>
+
+        <section class="dashboard-card danger-card">
+          <div class="card-header-row">
+            <div>
+              <p class="section-eyebrow">설정</p>
+              <h2>학습 데이터 초기화</h2>
+            </div>
+          </div>
+          <p class="danger-text">학습 완료, 즐겨찾기, 마지막 학습 위치, 최근 학습 시간이 모두 초기 상태로 돌아갑니다.</p>
+          <button id="openResetButton" type="button" class="danger-button">전체 초기화</button>
+        </section>
+      </main>
+    </section>
+
+    <section id="studyView" class="screen study-view hidden">
+      <header class="study-hero">
+        <div class="study-topbar">
+          <button id="goHomeButton" type="button" class="back-button">홈으로</button>
+
+          <div class="study-brand">
+            <p class="eyebrow">OPIC Mate</p>
+            <h1>단어 학습</h1>
+            <p class="header-description">실생활 단어와 쉬운 예문으로 오픽 답변을 편하게 연습해 보세요.</p>
+          </div>
+        </div>
+
+        <div class="progress-panel">
+          <div class="progress-row">
+            <strong id="progressText">진행률 0 / 0</strong>
+            <span id="sampleText">전체 단어 0개</span>
+          </div>
+          <div class="progress-bar" aria-hidden="true">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+        </div>
+      </header>
+
+      <section class="toolbar">
+        <label class="search-label" for="searchInput">단어 검색</label>
+        <div class="search-box">
+          <input id="searchInput" type="search" placeholder="영어, 뜻, 카테고리로 검색" autocomplete="off">
+        </div>
+
+        <div class="segment-group" id="filterButtons" aria-label="필터 선택">
+          <button type="button" class="segment-button is-active" data-filter="all">전체</button>
+          <button type="button" class="segment-button" data-filter="favorites">즐겨찾기</button>
+          <button type="button" class="segment-button" data-filter="completed">학습완료</button>
+          <button type="button" class="segment-button" data-filter="unlearned">미학습</button>
+        </div>
+
+        <div class="toolbar-row">
+          <div class="segment-group compact-group" id="viewButtons" aria-label="보기 방식 선택">
+            <button type="button" class="segment-button is-active" data-view="card">카드 보기</button>
+            <button type="button" class="segment-button" data-view="list">목록 보기</button>
+          </div>
+
+          <div class="toggle-group">
+            <button id="toggleMeaningButton" type="button" class="ghost-button">뜻 숨기기</button>
+            <button id="toggleSentenceButton" type="button" class="ghost-button">예문 숨기기</button>
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <span id="resultInfo">검색 결과 0개</span>
+          <span id="positionInfo">현재 0 / 0</span>
+        </div>
+      </section>
+
+      <main class="content-area">
+        <section id="emptyState" class="empty-state hidden">
+          <h2 id="emptyStateTitle">조건에 맞는 단어가 없어요.</h2>
+          <p id="emptyStateText">검색어를 지우거나 필터를 바꿔서 다시 확인해 보세요.</p>
+        </section>
+
+        <section id="cardView" class="card-view">
+          <article id="wordCard" class="word-card">
+            <!-- JavaScript가 단어 카드를 채웁니다. -->
+          </article>
+        </section>
+
+        <section id="listView" class="list-view hidden">
+          <div id="wordList" class="word-list">
+            <!-- JavaScript가 목록 카드를 채웁니다. -->
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="단어 이동">
+        <button id="prevButton" type="button" class="nav-button">이전</button>
+        <button id="randomButton" type="button" class="nav-button nav-button-accent">랜덤</button>
+        <button id="nextButton" type="button" class="nav-button">다음</button>
+      </nav>
+    </section>
+
+    <div id="resetModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-modal-close="true"></div>
+
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="resetModalTitle">
+        <p class="modal-eyebrow">주의</p>
+        <h2 id="resetModalTitle">전체 학습 기록을 초기화할까요?</h2>
+        <p class="modal-description">학습 기록, 즐겨찾기, 완료 상태, 마지막 학습 위치를 모두 삭제할까요?</p>
+
+        <div class="modal-actions">
+          <button id="cancelResetButton" type="button" class="modal-button">취소</button>
+          <button id="confirmResetButton" type="button" class="modal-button danger-fill">전체 초기화</button>
+        </div>
+      </div>
+    </div>
+
+    <p id="feedbackMessage" class="feedback-message" aria-live="polite"></p>
+  </div>
+
+  <noscript>이 앱은 JavaScript가 필요합니다. 브라우저 설정에서 JavaScript를 켜 주세요.</noscript>
+
+  <script src="./words.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
