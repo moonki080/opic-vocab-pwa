@@ -752,19 +752,73 @@
 
   function buildPracticeExample(word, index) {
     var topic = getCategoryTopicText(word.category);
-
-    if (index === 1) {
-      return {
-        sentence: 'I often use the word "' + word.word + '" when I talk about ' + topic.english + ".",
-        meaning: '저는 ' + topic.korean + '에 대해 말할 때 "' + word.word + '"라는 단어를 자주 써요.',
-        pronunciation: "아이 오픈 유즈 더 워드 " + word.pronunciation + " 웬 아이 톡 어바웃 " + topic.pronunciation
-      };
-    }
+    var examplePools = getGeneratedExamplePools(word, topic);
+    var pool = index === 1 ? examplePools.second : examplePools.third;
+    var selectedExample = pool[word.id % pool.length];
 
     return {
-      sentence: 'I want to use the word "' + word.word + '" more naturally in my OPIC answers.',
-      meaning: '저는 오픽 답변에서 "' + word.word + '"라는 단어를 더 자연스럽게 쓰고 싶어요.',
-      pronunciation: "아이 원트 투 유즈 더 워드 " + word.pronunciation + " 모어 내추럴리 인 마이 오픽 앤서즈"
+      sentence: selectedExample.sentence,
+      meaning: selectedExample.meaning,
+      pronunciation: selectedExample.pronunciation
+    };
+  }
+
+  function getGeneratedExamplePools(word, topic) {
+    return {
+      second: [
+        {
+          sentence: 'I often mention "' + word.word + '" when I talk about ' + topic.english + ".",
+          meaning: '저는 ' + topic.korean + '에 대해 말할 때 "' + word.word + '"를 자주 언급해요.',
+          pronunciation: '아이 오픈 멘션 ' + word.pronunciation + ' 웬 아이 톡 어바웃 ' + topic.pronunciation
+        },
+        {
+          sentence: 'The word "' + word.word + '" is useful when I describe ' + topic.english + ".",
+          meaning: '"' + word.word + '"는 ' + topic.korean + '을 설명할 때 유용한 단어예요.',
+          pronunciation: '더 워드 ' + word.pronunciation + ' 이즈 유스풀 웬 아이 디스크라이브 ' + topic.pronunciation
+        },
+        {
+          sentence: 'I can use "' + word.word + '" in a simple answer about ' + topic.english + ".",
+          meaning: '저는 ' + topic.korean + '에 관한 쉬운 답변에서 "' + word.word + '"를 쓸 수 있어요.',
+          pronunciation: '아이 캔 유즈 ' + word.pronunciation + ' 인 어 심플 앤서 어바웃 ' + topic.pronunciation
+        },
+        {
+          sentence: '"' + word.word + '" comes up a lot when I describe ' + topic.english + ".",
+          meaning: '"' + word.word + '"는 ' + topic.korean + '을 묘사할 때 자주 나와요.',
+          pronunciation: word.pronunciation + ' 컴즈 업 어 랏 웬 아이 디스크라이브 ' + topic.pronunciation
+        },
+        {
+          sentence: 'I usually hear or use "' + word.word + '" when I talk about ' + topic.english + ".",
+          meaning: '저는 ' + topic.korean + '에 대해 말할 때 "' + word.word + '"를 자주 듣거나 사용해요.',
+          pronunciation: '아이 유주얼리 히어 오어 유즈 ' + word.pronunciation + ' 웬 아이 톡 어바웃 ' + topic.pronunciation
+        }
+      ],
+      third: [
+        {
+          sentence: 'Last time, I used "' + word.word + '" in a short answer about ' + topic.english + ".",
+          meaning: '지난번에 저는 ' + topic.korean + '에 관한 짧은 답변에서 "' + word.word + '"를 사용했어요.',
+          pronunciation: '라스트 타임 아이 유즈드 ' + word.pronunciation + ' 인 어 쇼트 앤서 어바웃 ' + topic.pronunciation
+        },
+        {
+          sentence: 'I want to use "' + word.word + '" more naturally when I talk about ' + topic.english + ".",
+          meaning: '저는 ' + topic.korean + '에 대해 말할 때 "' + word.word + '"를 더 자연스럽게 쓰고 싶어요.',
+          pronunciation: '아이 원트 투 유즈 ' + word.pronunciation + ' 모어 내추럴리 웬 아이 톡 어바웃 ' + topic.pronunciation
+        },
+        {
+          sentence: 'I feel more confident when I use "' + word.word + '" in a simple OPIC answer.',
+          meaning: '저는 쉬운 오픽 답변에서 "' + word.word + '"를 쓰면 더 자신감이 생겨요.',
+          pronunciation: '아이 필 모어 컨피던트 웬 아이 유즈 ' + word.pronunciation + ' 인 어 심플 오픽 앤서'
+        },
+        {
+          sentence: 'For me, "' + word.word + '" is one of the basic words for talking about ' + topic.english + ".",
+          meaning: '제게 "' + word.word + '"는 ' + topic.korean + '에 대해 말할 때 기본이 되는 단어 중 하나예요.',
+          pronunciation: '포 미 ' + word.pronunciation + ' 이즈 원 오브 더 베이직 워즈 포 토킹 어바웃 ' + topic.pronunciation
+        },
+        {
+          sentence: 'I think "' + word.word + '" is easy to remember because it matches ' + topic.english + ".",
+          meaning: '저는 "' + word.word + '"가 ' + topic.korean + '과 잘 어울려서 기억하기 쉽다고 생각해요.',
+          pronunciation: '아이 씽크 ' + word.pronunciation + ' 이즈 이지 투 리멤버 비커즈 잇 매치스 ' + topic.pronunciation
+        }
+      ]
     };
   }
 
