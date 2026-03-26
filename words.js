@@ -10,6 +10,12 @@
   - sentenceMeaning: 예문 뜻
   - sentencePronunciation: 문장 전체 발음 가이드
   - category: 주제 분류
+  - examples: 선택 항목. 예문 3개를 직접 넣고 싶을 때 아래 형식으로 추가할 수 있습니다.
+    examples: [
+      { sentence: "", meaning: "", pronunciation: "" },
+      { sentence: "", meaning: "", pronunciation: "" },
+      { sentence: "", meaning: "", pronunciation: "" }
+    ]
 */
 var WORDS = [
   {

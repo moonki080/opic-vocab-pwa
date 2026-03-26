@@ -178,20 +178,26 @@
 
     elements.wordCard.addEventListener("click", function (event) {
       var button = event.target.closest("[data-action]");
+      var exampleIndex;
+
       if (!button) {
         return;
       }
 
-      handleAction(button.getAttribute("data-action"), Number(button.getAttribute("data-id")));
+      exampleIndex = parseExampleIndex(button.getAttribute("data-example-index"));
+      handleAction(button.getAttribute("data-action"), Number(button.getAttribute("data-id")), exampleIndex);
     });
 
     elements.wordList.addEventListener("click", function (event) {
       var button = event.target.closest("[data-action]");
+      var exampleIndex;
+
       if (!button) {
         return;
       }
 
-      handleAction(button.getAttribute("data-action"), Number(button.getAttribute("data-id")));
+      exampleIndex = parseExampleIndex(button.getAttribute("data-example-index"));
+      handleAction(button.getAttribute("data-action"), Number(button.getAttribute("data-id")), exampleIndex);
     });
   }
 
@@ -284,8 +290,10 @@
     showMessage("학습 기록을 모두 초기화했어요.");
   }
 
-  function handleAction(action, id) {
+  function handleAction(action, id, exampleIndex) {
     var word = findWordById(id);
+    var examples;
+    var targetExample;
 
     if (!word) {
       return;
@@ -295,10 +303,12 @@
       markRecentStudy(id);
       render();
       speakText(word.word);
-    } else if (action === "speak-sentence") {
+    } else if (action === "speak-sentence" || action === "speak-example") {
+      examples = getWordExamples(word);
+      targetExample = examples[exampleIndex] || examples[0];
       markRecentStudy(id);
       render();
-      speakText(word.sentence);
+      speakText(targetExample ? targetExample.sentence : word.sentence);
     } else if (action === "toggle-favorite") {
       toggleRecord(state.favorites, id);
       markRecentStudy(id);
@@ -331,6 +341,7 @@
   function renderHome(stats) {
     var recentWord = getRecentWord(stats);
     var hasRecentInfo = !!state.recentStudyAt || stats.completedCount > 0 || stats.favoriteCount > 0;
+    var examples;
 
     elements.encouragementText.textContent = currentEncouragement;
     elements.homeProgressPercent.textContent = stats.progressPercent + "%";
@@ -352,9 +363,10 @@
       return;
     }
 
+    examples = getWordExamples(recentWord);
     elements.recentWordText.textContent = recentWord.word + " · " + recentWord.meaning;
     elements.recentTimeText.textContent = state.recentStudyAt ? "최근 학습 시간: " + formatDateTime(state.recentStudyAt) : "이전 버전 기록에는 시간 정보가 없어요.";
-    elements.recentCategoryText.textContent = "카테고리: " + recentWord.category + " / 예문: " + recentWord.sentence;
+    elements.recentCategoryText.textContent = "카테고리: " + recentWord.category + " / 예문: " + examples[0].sentence;
   }
 
   function renderStudy(stats, filteredWords, currentWord) {
@@ -401,11 +413,14 @@
 
   function renderCard(word) {
     var badges = [];
+    var examples;
 
     if (!word) {
       elements.wordCard.innerHTML = "";
       return;
     }
+
+    examples = getWordExamples(word);
 
     if (state.favorites[word.id]) {
       badges.push('<span class="state-badge favorite">즐겨찾기</span>');
@@ -431,14 +446,11 @@
       '<section class="info-block">' +
         "<h3>예문</h3>" +
         (state.showSentence
-          ? "<p>" + escapeHTML(word.sentence) + "</p>" +
-            "<p>" + escapeHTML(word.sentenceMeaning) + "</p>" +
-            "<p>발음: " + escapeHTML(word.sentencePronunciation) + "</p>"
+          ? renderExampleCards(word, examples)
           : '<p class="placeholder-text">예문이 숨겨져 있어요. 위의 버튼으로 다시 볼 수 있어요.</p>') +
       "</section>" +
       '<div class="action-grid">' +
         '<button type="button" class="action-button primary" data-action="speak-word" data-id="' + word.id + '">단어 듣기</button>' +
-        '<button type="button" class="action-button primary" data-action="speak-sentence" data-id="' + word.id + '">문장 듣기</button>' +
         '<button type="button" class="action-button ' + (state.favorites[word.id] ? "favorite-active" : "") + '" data-action="toggle-favorite" data-id="' + word.id + '">' + (state.favorites[word.id] ? "즐겨찾기 해제" : "즐겨찾기") + "</button>" +
         '<button type="button" class="action-button ' + (state.completed[word.id] ? "completed-active" : "") + '" data-action="toggle-completed" data-id="' + word.id + '">' + (state.completed[word.id] ? "완료 해제" : "학습 완료") + "</button>" +
       "</div>";
@@ -447,6 +459,7 @@
   function renderList(filteredWords) {
     var html = filteredWords.map(function (word) {
       var badges = [];
+      var examples = getWordExamples(word);
 
       if (state.favorites[word.id]) {
         badges.push('<span class="state-badge favorite">즐겨찾기</span>');
@@ -465,9 +478,7 @@
           '<h3 class="list-title">' + escapeHTML(word.word) + "</h3>" +
           '<p class="list-pronunciation">발음 가이드: ' + escapeHTML(word.pronunciation) + "</p>" +
           '<p class="list-text">' + (state.showMeaning ? escapeHTML(word.meaning) : "뜻 숨김") + "</p>" +
-          '<p class="list-text">' + (state.showSentence ? escapeHTML(word.sentence) : "예문 숨김") + "</p>" +
-          '<p class="list-text">' + (state.showSentence ? escapeHTML(word.sentenceMeaning) : "예문 뜻 숨김") + "</p>" +
-          '<p class="list-text">' + (state.showSentence ? "발음: " + escapeHTML(word.sentencePronunciation) : "예문 발음 가이드 숨김") + "</p>" +
+          (state.showSentence ? renderListExamples(examples) : '<p class="list-text">예문 숨김</p>') +
           '<div class="list-action-grid">' +
             '<button type="button" class="list-action-button primary" data-action="open-card" data-id="' + word.id + '">카드 열기</button>' +
             '<button type="button" class="list-action-button" data-action="speak-word" data-id="' + word.id + '">단어 듣기</button>' +
@@ -592,15 +603,13 @@
     var query = (state.searchText || "").toLowerCase();
 
     return WORDS.filter(function (word) {
+      var examples = getWordExamples(word);
       var searchTarget = [
         word.word,
         word.meaning,
         word.pronunciation,
-        word.sentence,
-        word.sentenceMeaning,
-        word.sentencePronunciation,
         word.category
-      ].join(" ").toLowerCase();
+      ].concat(getExampleSearchParts(examples)).join(" ").toLowerCase();
       var matchesQuery = !query || searchTarget.indexOf(query) !== -1;
       var matchesFilter = true;
 
@@ -659,6 +668,224 @@
     });
 
     return foundWord;
+  }
+
+  function getWordExamples(word) {
+    var examples = [];
+
+    if (!word) {
+      return examples;
+    }
+
+    if (Array.isArray(word.examples)) {
+      word.examples.forEach(function (item) {
+        var normalizedExample = normalizeExampleItem(item);
+
+        if (normalizedExample) {
+          examples.push(normalizedExample);
+        }
+      });
+    }
+
+    if (!examples.length && word.sentence) {
+      examples.push({
+        sentence: word.sentence,
+        meaning: word.sentenceMeaning || "",
+        pronunciation: word.sentencePronunciation || ""
+      });
+    }
+
+    while (examples.length < 3) {
+      examples.push(buildPracticeExample(word, examples.length));
+    }
+
+    return examples.slice(0, 3);
+  }
+
+  function normalizeExampleItem(item) {
+    if (!item || !item.sentence) {
+      return null;
+    }
+
+    return {
+      sentence: item.sentence,
+      meaning: item.meaning || item.sentenceMeaning || "",
+      pronunciation: item.pronunciation || item.sentencePronunciation || ""
+    };
+  }
+
+  function buildPracticeExample(word, index) {
+    var topic = getCategoryTopicText(word.category);
+
+    if (index === 1) {
+      return {
+        sentence: 'I often use the word "' + word.word + '" when I talk about ' + topic.english + ".",
+        meaning: '저는 ' + topic.korean + '에 대해 말할 때 "' + word.word + '"라는 단어를 자주 써요.',
+        pronunciation: "아이 오픈 유즈 더 워드 " + word.pronunciation + " 웬 아이 톡 어바웃 " + topic.pronunciation
+      };
+    }
+
+    return {
+      sentence: 'I want to use the word "' + word.word + '" more naturally in my OPIC answers.',
+      meaning: '저는 오픽 답변에서 "' + word.word + '"라는 단어를 더 자연스럽게 쓰고 싶어요.',
+      pronunciation: "아이 원트 투 유즈 더 워드 " + word.pronunciation + " 모어 내추럴리 인 마이 오픽 앤서즈"
+    };
+  }
+
+  function getCategoryTopicText(category) {
+    var topics = {
+      "자기소개": {
+        english: "myself",
+        korean: "자기소개",
+        pronunciation: "마이셀프"
+      },
+      "가족/친구": {
+        english: "my family and friends",
+        korean: "가족과 친구",
+        pronunciation: "마이 패밀리 앤 프렌즈"
+      },
+      "집/동네": {
+        english: "my home and neighborhood",
+        korean: "집과 동네",
+        pronunciation: "마이 홈 앤 네이버후드"
+      },
+      "음식": {
+        english: "food",
+        korean: "음식",
+        pronunciation: "푸드"
+      },
+      "카페": {
+        english: "cafes",
+        korean: "카페",
+        pronunciation: "카페이즈"
+      },
+      "쇼핑": {
+        english: "shopping",
+        korean: "쇼핑",
+        pronunciation: "쇼핑"
+      },
+      "여행": {
+        english: "travel",
+        korean: "여행",
+        pronunciation: "트래블"
+      },
+      "영화/드라마": {
+        english: "movies and dramas",
+        korean: "영화와 드라마",
+        pronunciation: "무비즈 앤 드라마즈"
+      },
+      "취미": {
+        english: "my hobbies",
+        korean: "취미",
+        pronunciation: "마이 하비스"
+      },
+      "운동": {
+        english: "exercise",
+        korean: "운동",
+        pronunciation: "엑서사이즈"
+      },
+      "일상 루틴": {
+        english: "my daily routine",
+        korean: "일상 루틴",
+        pronunciation: "마이 데일리 루틴"
+      },
+      "교통": {
+        english: "transportation",
+        korean: "교통",
+        pronunciation: "트랜스포테이션"
+      },
+      "날씨": {
+        english: "the weather",
+        korean: "날씨",
+        pronunciation: "더 웨더"
+      },
+      "건강": {
+        english: "my health",
+        korean: "건강",
+        pronunciation: "마이 헬스"
+      },
+      "휴가": {
+        english: "my vacation plans",
+        korean: "휴가 계획",
+        pronunciation: "마이 베이케이션 플랜즈"
+      }
+    };
+
+    return topics[category] || {
+      english: "daily life",
+      korean: "일상",
+      pronunciation: "데일리 라이프"
+    };
+  }
+
+  function getExampleSearchParts(examples) {
+    var parts = [];
+
+    examples.forEach(function (example) {
+      parts.push(example.sentence || "");
+      parts.push(example.meaning || "");
+      parts.push(example.pronunciation || "");
+    });
+
+    return parts;
+  }
+
+  function getExampleLabel(index) {
+    if (index === 0) {
+      return "실전 예문";
+    }
+
+    if (index === 1) {
+      return "주제 연습";
+    }
+
+    return "답변 연습";
+  }
+
+  function renderExampleCards(word, examples) {
+    return '<div class="example-list">' + examples.map(function (example, index) {
+      return (
+        '<article class="example-card">' +
+          '<div class="example-header">' +
+            '<div class="example-label-group">' +
+              '<span class="example-number">예문 ' + (index + 1) + "</span>" +
+              '<span class="example-tag">' + getExampleLabel(index) + "</span>" +
+            "</div>" +
+            '<button type="button" class="example-speak-button" data-action="speak-example" data-id="' + word.id + '" data-example-index="' + index + '">듣기</button>' +
+          "</div>" +
+          '<p class="example-sentence">' + escapeHTML(example.sentence) + "</p>" +
+          '<p class="example-meaning">' + escapeHTML(example.meaning) + "</p>" +
+          '<p class="example-pronunciation">발음: ' + escapeHTML(example.pronunciation) + "</p>" +
+        "</article>"
+      );
+    }).join("") + "</div>";
+  }
+
+  function renderListExamples(examples) {
+    return '<div class="list-example-stack">' + examples.map(function (example, index) {
+      return (
+        '<article class="list-example-card">' +
+          '<div class="list-example-header">' +
+            '<span class="example-number">예문 ' + (index + 1) + "</span>" +
+            '<span class="example-tag">' + getExampleLabel(index) + "</span>" +
+          "</div>" +
+          '<p class="list-example-sentence">' + escapeHTML(example.sentence) + "</p>" +
+          '<p class="list-example-meaning">' + escapeHTML(example.meaning) + "</p>" +
+          '<p class="list-example-pronunciation">발음: ' + escapeHTML(example.pronunciation) + "</p>" +
+        "</article>"
+      );
+    }).join("") + "</div>";
+  }
+
+  function parseExampleIndex(value) {
+    var parsedValue;
+
+    if (value === null || typeof value === "undefined" || value === "") {
+      return 0;
+    }
+
+    parsedValue = Number(value);
+    return isNaN(parsedValue) ? 0 : parsedValue;
   }
 
   function getEmptyStateTitle() {
