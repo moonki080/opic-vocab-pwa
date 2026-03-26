@@ -25,6 +25,7 @@
     favorites: {},
     completed: {},
     currentWordId: WORDS.length ? WORDS[0].id : null,
+    currentExampleIndex: 0,
     showMeaning: true,
     showSentence: true,
     searchText: "",
@@ -246,8 +247,10 @@
     if (options.random && filteredWords.length) {
       targetWord = filteredWords[Math.floor(Math.random() * filteredWords.length)];
       state.currentWordId = targetWord.id;
+      state.currentExampleIndex = 0;
     } else if (filteredWords.length && getWordIndex(filteredWords, state.currentWordId) === -1) {
       state.currentWordId = filteredWords[0].id;
+      state.currentExampleIndex = 0;
     }
 
     if (filteredWords.length) {
@@ -303,6 +306,10 @@
       markRecentStudy(id);
       render();
       speakText(word.word);
+    } else if (action === "prev-example") {
+      moveExample(-1, word);
+    } else if (action === "next-example") {
+      moveExample(1, word);
     } else if (action === "speak-sentence" || action === "speak-example") {
       examples = getWordExamples(word);
       targetExample = examples[exampleIndex] || examples[0];
@@ -414,6 +421,7 @@
   function renderCard(word) {
     var badges = [];
     var examples;
+    var currentExampleIndex;
 
     if (!word) {
       elements.wordCard.innerHTML = "";
@@ -421,6 +429,7 @@
     }
 
     examples = getWordExamples(word);
+    currentExampleIndex = getSafeExampleIndex(examples);
 
     if (state.favorites[word.id]) {
       badges.push('<span class="state-badge favorite">즐겨찾기</span>');
@@ -446,7 +455,7 @@
       '<section class="info-block">' +
         "<h3>예문</h3>" +
         (state.showSentence
-          ? renderExampleCards(word, examples)
+          ? renderExamplePanel(word, examples, currentExampleIndex)
           : '<p class="placeholder-text">예문이 숨겨져 있어요. 위의 버튼으로 다시 볼 수 있어요.</p>') +
       "</section>" +
       '<div class="action-grid">' +
@@ -478,7 +487,7 @@
           '<h3 class="list-title">' + escapeHTML(word.word) + "</h3>" +
           '<p class="list-pronunciation">발음 가이드: ' + escapeHTML(word.pronunciation) + "</p>" +
           '<p class="list-text">' + (state.showMeaning ? escapeHTML(word.meaning) : "뜻 숨김") + "</p>" +
-          (state.showSentence ? renderListExamples(examples) : '<p class="list-text">예문 숨김</p>') +
+          (state.showSentence ? renderListExampleSummary(examples) : '<p class="list-text">예문 숨김</p>') +
           '<div class="list-action-grid">' +
             '<button type="button" class="list-action-button primary" data-action="open-card" data-id="' + word.id + '">카드 열기</button>' +
             '<button type="button" class="list-action-button" data-action="speak-word" data-id="' + word.id + '">단어 듣기</button>' +
@@ -554,8 +563,34 @@
     render();
   }
 
+  function moveExample(step, word) {
+    var examples;
+    var nextIndex;
+
+    if (!word) {
+      return;
+    }
+
+    examples = getWordExamples(word);
+    nextIndex = getSafeExampleIndex(examples) + step;
+
+    if (nextIndex < 0) {
+      nextIndex = examples.length - 1;
+    } else if (nextIndex >= examples.length) {
+      nextIndex = 0;
+    }
+
+    state.currentExampleIndex = nextIndex;
+    markRecentStudy(word.id);
+    render();
+  }
+
   function markRecentStudy(wordId) {
     if (typeof wordId === "number") {
+      if (state.currentWordId !== wordId) {
+        state.currentExampleIndex = 0;
+      }
+
       state.currentWordId = wordId;
     }
 
@@ -634,6 +669,7 @@
 
     if (!currentWord || getWordIndex(filteredWords, state.currentWordId) === -1) {
       state.currentWordId = filteredWords[0].id;
+      state.currentExampleIndex = 0;
       currentWord = filteredWords[0];
     }
 
@@ -842,39 +878,43 @@
     return "답변 연습";
   }
 
-  function renderExampleCards(word, examples) {
-    return '<div class="example-list">' + examples.map(function (example, index) {
-      return (
-        '<article class="example-card">' +
-          '<div class="example-header">' +
-            '<div class="example-label-group">' +
-              '<span class="example-number">예문 ' + (index + 1) + "</span>" +
-              '<span class="example-tag">' + getExampleLabel(index) + "</span>" +
-            "</div>" +
-            '<button type="button" class="example-speak-button" data-action="speak-example" data-id="' + word.id + '" data-example-index="' + index + '">듣기</button>' +
+  function renderExamplePanel(word, examples, currentExampleIndex) {
+    var example = examples[currentExampleIndex] || examples[0];
+
+    return (
+      '<article class="example-panel">' +
+        '<div class="example-topbar">' +
+          '<div class="example-label-group">' +
+            '<span class="example-number">예문 ' + (currentExampleIndex + 1) + " / " + examples.length + "</span>" +
+            '<span class="example-tag">' + getExampleLabel(currentExampleIndex) + "</span>" +
           "</div>" +
+          '<button type="button" class="example-speak-button" data-action="speak-example" data-id="' + word.id + '" data-example-index="' + currentExampleIndex + '">문장 듣기</button>' +
+        "</div>" +
+        '<div class="example-copy">' +
           '<p class="example-sentence">' + escapeHTML(example.sentence) + "</p>" +
           '<p class="example-meaning">' + escapeHTML(example.meaning) + "</p>" +
           '<p class="example-pronunciation">발음: ' + escapeHTML(example.pronunciation) + "</p>" +
-        "</article>"
-      );
-    }).join("") + "</div>";
+        "</div>" +
+        '<div class="example-nav">' +
+          '<button type="button" class="example-nav-button" data-action="prev-example" data-id="' + word.id + '">이전 예문</button>' +
+          '<button type="button" class="example-nav-button" data-action="next-example" data-id="' + word.id + '">다음 예문</button>' +
+        "</div>" +
+      "</article>"
+    );
   }
 
-  function renderListExamples(examples) {
-    return '<div class="list-example-stack">' + examples.map(function (example, index) {
-      return (
-        '<article class="list-example-card">' +
-          '<div class="list-example-header">' +
-            '<span class="example-number">예문 ' + (index + 1) + "</span>" +
-            '<span class="example-tag">' + getExampleLabel(index) + "</span>" +
-          "</div>" +
-          '<p class="list-example-sentence">' + escapeHTML(example.sentence) + "</p>" +
-          '<p class="list-example-meaning">' + escapeHTML(example.meaning) + "</p>" +
-          '<p class="list-example-pronunciation">발음: ' + escapeHTML(example.pronunciation) + "</p>" +
-        "</article>"
-      );
-    }).join("") + "</div>";
+  function renderListExampleSummary(examples) {
+    var firstExample = examples[0];
+
+    return (
+      '<div class="list-example-summary">' +
+        '<div class="list-example-header">' +
+          '<span class="example-number">예문 3개 제공</span>' +
+          '<span class="example-tag">카드 보기 추천</span>' +
+        "</div>" +
+        '<p class="list-example-summary-text">' + escapeHTML(firstExample.sentence) + "</p>" +
+      "</div>"
+    );
   }
 
   function parseExampleIndex(value) {
@@ -974,6 +1014,7 @@
       loadedState.currentWordId = typeof parsedState.currentWordId === "number"
         ? parsedState.currentWordId
         : (typeof parsedState.lastViewedWord === "number" ? parsedState.lastViewedWord : loadedState.currentWordId);
+      loadedState.currentExampleIndex = typeof parsedState.currentExampleIndex === "number" ? parsedState.currentExampleIndex : 0;
       loadedState.showMeaning = typeof parsedState.showMeaning === "boolean" ? parsedState.showMeaning : loadedState.showMeaning;
       loadedState.showSentence = typeof parsedState.showSentence === "boolean" ? parsedState.showSentence : loadedState.showSentence;
       loadedState.searchText = typeof parsedState.searchText === "string" ? parsedState.searchText : loadedState.searchText;
@@ -1006,6 +1047,7 @@
       favorites: normalizeRecord(source.favorites),
       completed: normalizeRecord(source.completed),
       currentWordId: source.currentWordId,
+      currentExampleIndex: typeof source.currentExampleIndex === "number" ? source.currentExampleIndex : 0,
       showMeaning: source.showMeaning,
       showSentence: source.showSentence,
       searchText: source.searchText,
@@ -1030,6 +1072,19 @@
     });
 
     return normalized;
+  }
+
+  function getSafeExampleIndex(examples) {
+    if (!examples.length) {
+      state.currentExampleIndex = 0;
+      return 0;
+    }
+
+    if (typeof state.currentExampleIndex !== "number" || state.currentExampleIndex < 0 || state.currentExampleIndex >= examples.length) {
+      state.currentExampleIndex = 0;
+    }
+
+    return state.currentExampleIndex;
   }
 
   function refreshEncouragement() {

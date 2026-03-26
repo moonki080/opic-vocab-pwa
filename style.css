@@ -650,22 +650,16 @@ button {
   margin-top: 8px;
 }
 
-.example-list,
-.list-example-stack {
-  display: grid;
-  gap: 12px;
+.example-panel,
+.list-example-summary {
   margin-top: 18px;
-}
-
-.example-card,
-.list-example-card {
   padding: 16px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(129, 140, 248, 0.16);
   background: rgba(248, 250, 255, 0.96);
 }
 
-.example-header,
+.example-topbar,
 .list-example-header {
   display: flex;
   align-items: center;
@@ -710,21 +704,39 @@ button {
   background: linear-gradient(135deg, var(--primary), var(--secondary));
 }
 
+.example-copy {
+  margin-top: 12px;
+}
+
 .example-sentence,
 .example-meaning,
 .example-pronunciation,
-.list-example-sentence,
-.list-example-meaning,
-.list-example-pronunciation {
+.list-example-summary-text {
   margin: 10px 0 0;
   line-height: 1.65;
 }
 
 .example-meaning,
 .example-pronunciation,
-.list-example-meaning,
-.list-example-pronunciation {
+.list-example-summary-text {
   color: var(--text-sub);
+}
+
+.example-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.example-nav-button {
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  color: var(--primary-strong);
+  background: rgba(232, 238, 255, 0.98);
+  border: 1px solid rgba(99, 102, 241, 0.16);
 }
 
 .action-grid,
@@ -789,19 +801,16 @@ button {
   margin-top: 6px;
 }
 
-.list-example-stack {
-  margin-top: 14px;
-}
-
-.list-example-card {
-  padding: 14px;
-}
-
 .list-example-header {
   justify-content: flex-start;
 }
 
-.list-example-sentence {
+.list-example-summary {
+  margin-top: 14px;
+  padding: 14px;
+}
+
+.list-example-summary-text {
   margin-top: 8px;
 }
 
@@ -908,6 +917,7 @@ button {
 .nav-button:hover,
 .action-button:hover,
 .list-action-button:hover,
+.example-nav-button:hover,
 .segment-button:hover,
 .ghost-button:hover,
 .danger-button:hover,

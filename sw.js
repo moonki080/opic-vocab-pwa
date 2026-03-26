@@ -2,7 +2,7 @@
   서비스 워커 파일입니다.
   핵심 정적 파일을 캐시에 저장해서 오프라인에서도 기본 화면을 열 수 있게 합니다.
 */
-var CACHE_NAME = "opic-mate-pwa-v2";
+var CACHE_NAME = "opic-mate-pwa-v3";
 var APP_SHELL_FILES = [
   "./",
   "./index.html",
