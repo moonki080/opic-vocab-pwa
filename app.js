@@ -327,6 +327,10 @@
       showMessage(state.completed[id] ? "학습 완료로 표시했어요." : "학습 완료를 해제했어요.");
       render();
     } else if (action === "open-card") {
+      if (state.currentWordId !== id) {
+        state.currentExampleIndex = 0;
+      }
+
       state.currentWordId = id;
       state.viewMode = "card";
       markRecentStudy(id);
@@ -754,7 +758,7 @@
     var topic = getCategoryTopicText(word.category);
     var examplePools = getGeneratedExamplePools(word, topic);
     var pool = index === 1 ? examplePools.second : examplePools.third;
-    var selectedExample = pool[word.id % pool.length];
+    var selectedExample = pool[getExampleTemplateIndex(word, pool.length, index)];
 
     return {
       sentence: selectedExample.sentence,
@@ -790,6 +794,21 @@
           sentence: 'I usually hear or use "' + word.word + '" when I talk about ' + topic.english + ".",
           meaning: '저는 ' + topic.korean + '에 대해 말할 때 "' + word.word + '"를 자주 듣거나 사용해요.',
           pronunciation: '아이 유주얼리 히어 오어 유즈 ' + word.pronunciation + ' 웬 아이 톡 어바웃 ' + topic.pronunciation
+        },
+        {
+          sentence: 'I think "' + word.word + '" is a useful word for simple answers about ' + topic.english + ".",
+          meaning: '저는 "' + word.word + '"가 ' + topic.korean + '에 대한 쉬운 답변에 유용한 단어라고 생각해요.',
+          pronunciation: '아이 씽크 ' + word.pronunciation + ' 이즈 어 유스풀 워드 포 심플 앤서즈 어바웃 ' + topic.pronunciation
+        },
+        {
+          sentence: 'When I practice OPIC, I try to include "' + word.word + '" in answers about ' + topic.english + ".",
+          meaning: '저는 오픽을 연습할 때 ' + topic.korean + '에 대한 답변에 "' + word.word + '"를 넣으려고 해요.',
+          pronunciation: '웬 아이 프랙티스 오픽 아이 트라이 투 인클루드 ' + word.pronunciation + ' 인 앤서즈 어바웃 ' + topic.pronunciation
+        },
+        {
+          sentence: '"' + word.word + '" sounds natural in easy stories about ' + topic.english + ".",
+          meaning: '"' + word.word + '"는 ' + topic.korean + '에 대한 쉬운 이야기에서 자연스럽게 들려요.',
+          pronunciation: word.pronunciation + ' 사운즈 내추럴 인 이지 스토리즈 어바웃 ' + topic.pronunciation
         }
       ],
       third: [
@@ -817,9 +836,36 @@
           sentence: 'I think "' + word.word + '" is easy to remember because it matches ' + topic.english + ".",
           meaning: '저는 "' + word.word + '"가 ' + topic.korean + '과 잘 어울려서 기억하기 쉽다고 생각해요.',
           pronunciation: '아이 씽크 ' + word.pronunciation + ' 이즈 이지 투 리멤버 비커즈 잇 매치스 ' + topic.pronunciation
+        },
+        {
+          sentence: 'These days, I practice using "' + word.word + '" in a few simple sentences.',
+          meaning: '요즘 저는 "' + word.word + '"를 몇 개의 쉬운 문장에서 쓰는 연습을 하고 있어요.',
+          pronunciation: '디즈 데이즈 아이 프랙티스 유징 ' + word.pronunciation + ' 인 어 퓨 심플 센턴시즈'
+        },
+        {
+          sentence: 'In my OPIC practice, "' + word.word + '" helps me make my answer more specific.',
+          meaning: '오픽 연습에서 "' + word.word + '"는 제 답변을 더 구체적으로 만드는 데 도움이 돼요.',
+          pronunciation: '인 마이 오픽 프랙티스 ' + word.pronunciation + ' 헬프스 미 메이크 마이 앤서 모어 스페시픽'
+        },
+        {
+          sentence: 'I did not use "' + word.word + '" much before, but now I try to use it more often.',
+          meaning: '예전에는 "' + word.word + '"를 많이 쓰지 않았지만, 지금은 더 자주 쓰려고 해요.',
+          pronunciation: '아이 디드 낫 유즈 ' + word.pronunciation + ' 머치 비포 벗 나우 아이 트라이 투 유즈 잇 모어 오픈'
         }
       ]
     };
+  }
+
+  function getExampleTemplateIndex(word, poolLength, seedOffset) {
+    var source = (word.word || "") + "|" + (word.category || "") + "|" + String(seedOffset);
+    var total = 0;
+    var index = 0;
+
+    for (index = 0; index < source.length; index += 1) {
+      total += source.charCodeAt(index) * (index + 1);
+    }
+
+    return poolLength ? total % poolLength : 0;
   }
 
   function getCategoryTopicText(category) {
